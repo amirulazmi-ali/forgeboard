@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Activity, ArrowUpRight, Check, ChevronDown, Factory, Gauge, LayoutDashboard, MonitorPlay, Plus, Save, Settings2, ShieldCheck, Trash2, Wrench, X } from 'lucide-react'
+import { Activity, ArrowUpRight, Check, ChevronDown, Factory, Gauge, LayoutDashboard, Maximize2, MonitorPlay, Plus, Save, Settings2, ShieldCheck, Trash2, Wrench, X } from 'lucide-react'
 
 const seedLines = [
   { id: 'L-01', name: 'Assembly 01', part: 'AX-4407', target: 42, status: 'Running', shift: 'A', color: 'mint' },
@@ -18,6 +18,7 @@ function App() {
   const [popup, setPopup] = useState(null)
   const [copy, setCopy] = useState(() => JSON.parse(localStorage.getItem('forge-copy') || 'null') || defaultCopy)
   const [showForm, setShowForm] = useState(false)
+  const [kiosk, setKiosk] = useState(() => new URLSearchParams(window.location.search).get('kiosk') === '1')
 
   useEffect(() => localStorage.setItem('forge-lines', JSON.stringify(lines)), [lines])
   useEffect(() => localStorage.setItem('forge-output', JSON.stringify(output)), [output])
@@ -66,6 +67,28 @@ function App() {
     setCopy({ ...copy, [key]: value })
   }
 
+  function enterKiosk() {
+    setKiosk(true)
+    window.history.replaceState({}, '', `${window.location.pathname}?kiosk=1`)
+    document.documentElement.requestFullscreen?.().catch(() => {})
+  }
+
+  function exitKiosk() {
+    setKiosk(false)
+    window.history.replaceState({}, '', window.location.pathname)
+    document.exitFullscreen?.().catch(() => {})
+  }
+
+  if (kiosk) {
+    return <div className="kiosk-shell">
+      <header className="kiosk-header"><div className="kiosk-brand"><span className="brand-mark"><Factory size={22} /></span><strong>{copy.brand}</strong><span className="kiosk-divider" /> <span>Plant 04 · Shift A</span></div><div className="kiosk-live"><span className="pulse" /> {copy.liveLabel} <button className="kiosk-exit" onClick={exitKiosk} title="Exit kiosk display"><Maximize2 size={16} /></button></div></header>
+      <section className="kiosk-summary"><div><p className="eyebrow light">Current shift output</p><strong>{totals.toLocaleString()} <small>units</small></strong><span><ArrowUpRight size={16} /> 6.8% above yesterday's pace</span></div><div className="kiosk-attainment"><strong>{attainment}%</strong><span>attainment</span></div><div className="kiosk-stat"><span>Active lines</span><strong>{lines.filter((line) => line.status === 'Running').length}<small> / {lines.length}</small></strong></div><div className="kiosk-stat"><span>Shift elapsed</span><strong>06:42</strong></div></section>
+      <div className="kiosk-heading"><div><p className="eyebrow">{copy.lineControl}</p><h1>{copy.floorTitle}</h1></div><span>Tap the top-right icon to leave display mode</span></div>
+      <section className="kiosk-grid">{lines.map((line) => { const current = output[line.id][7] || output[line.id][6]; const percentage = Math.min(100, Math.round((current / line.target) * 100)); return <article className="kiosk-line" key={line.id}><div className="kiosk-line-top"><div><span className={`kiosk-line-icon ${line.color}`}><Gauge size={22} /></span><div><strong>{line.name}</strong><small>{line.id} · {line.part}</small></div></div><span className={`state ${line.status === 'Running' ? 'running' : 'changeover'}`}><span />{line.status}</span></div><div className="kiosk-value"><strong>{current}</strong><span>/ {line.target} UPH</span><b>{percentage}%</b></div><div className="kiosk-progress"><span style={{ width: `${percentage}%` }} /></div><div className="kiosk-line-bottom"><span>Current hour</span><span>{copy.targetLabel} <b>{line.target} UPH</b></span></div></article> })}</section>
+      <footer><span>{copy.brand} Operations OS</span><span>Read-only display · Updates live from operator entries</span></footer>
+    </div>
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -81,7 +104,7 @@ function App() {
       </aside>
 
       <main className="main-content">
-        <header className="topbar"><div><p className="eyebrow">Thursday · 20 August 2026 · Shift A</p><h1>{screen === 'overview' ? copy.overviewTitle : copy.engineerNav}</h1></div><div className="top-actions"><div className="live-pill"><span className="pulse" /> {copy.liveLabel}</div><button className="icon-button" title="Admin wording" onClick={() => setPopup('admin')}><Wrench size={18} /></button></div></header>
+        <header className="topbar"><div><p className="eyebrow">Thursday · 20 August 2026 · Shift A</p><h1>{screen === 'overview' ? copy.overviewTitle : copy.engineerNav}</h1></div><div className="top-actions"><div className="live-pill"><span className="pulse" /> {copy.liveLabel}</div>{screen === 'overview' && <button className="kiosk-button" onClick={enterKiosk}><Maximize2 size={16} /> TV display</button>}<button className="icon-button" title="Admin wording" onClick={() => setPopup('admin')}><Wrench size={18} /></button></div></header>
 
         <section className="hero-strip"><div><p className="eyebrow light">Current shift performance</p><div className="hero-number">{totals.toLocaleString()} <span>units</span></div><p className="hero-caption"><ArrowUpRight size={15} /> 6.8% above yesterday's pace</p></div><div className="hero-ring"><div><strong>{attainment}%</strong><span>attainment</span></div></div><div className="hero-meta"><div><span>Shift elapsed</span><strong>06<span>:</span>42</strong></div><div><span>Active lines</span><strong>{lines.filter((line) => line.status === 'Running').length}<small> / {lines.length}</small></strong></div></div></section>
 

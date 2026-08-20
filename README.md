@@ -21,6 +21,8 @@ docker compose up --build
 
 Open http://localhost:4173. The image is based on `ubuntu:24.04`, installs Node 22 for Vite compatibility, and serves the production build on port `4173`.
 
+For a secondary LCD or TV, open http://localhost:4173/?kiosk=1. This is a read-only, large-format display. The `TV display` button on the overview opens the same mode and requests browser fullscreen.
+
 To build and run without Compose:
 
 ```bash
