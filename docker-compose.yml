@@ -6,4 +6,15 @@ services:
     container_name: production-dashboard
     ports:
       - "4173:4173"
+    volumes:
+      - forgeboard-data:/app/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:4173/api/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  forgeboard-data:

@@ -1,15 +1,24 @@
 # Forgeboard Production Dashboard
 
-A local-first production line dashboard for engineer UPH targets and operator hourly output entry.
+A production line dashboard for engineer UPH targets and operator hourly output entry, backed by SQLite.
 
 ## Run
 
 ```bash
 npm install
+npm run migrate
+npm run server
+```
+
+In a second terminal:
+
+```bash
 npm run dev
 ```
 
-The dashboard stores line configuration and hourly entries in the browser's local storage.
+The browser communicates with the SQLite API through `/api/state`. Production lines, hourly output, and application wording are stored in `data/forgeboard.sqlite`, not browser local storage. See [docs/database.md](docs/database.md) for the schema and migration workflow.
+
+Authentication and role permissions are documented in [docs/authentication.md](docs/authentication.md). Development accounts are seeded on the first server start; configure role passwords with environment variables before production use.
 
 ## Run with Ubuntu container
 
@@ -19,7 +28,7 @@ Build and start the production container:
 docker compose up --build
 ```
 
-Open http://localhost:4173. The image is based on `ubuntu:24.04`, installs Node 22 for Vite compatibility, and serves the production build on port `4173`.
+Open http://localhost:4173. The image uses the official Node 22 Bookworm slim image and serves the production build and SQLite API on port `4173`.
 
 For a secondary LCD or TV, open http://localhost:4173/?kiosk=1. This is a read-only, large-format display. The `TV display` button on the overview opens the same mode and requests browser fullscreen.
 
