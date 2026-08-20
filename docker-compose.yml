@@ -1,0 +1,9 @@
+services:
+  production-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: production-dashboard
+    ports:
+      - "4173:4173"
+    restart: unless-stopped
